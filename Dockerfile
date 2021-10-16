@@ -152,7 +152,7 @@ RUN apk add --update \
   curl \
   libass \
   libvpx \
-  libvorbis \
+  libvorbis \ 
   libwebp \
   libtheora \
   opus \
@@ -169,8 +169,7 @@ COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 RUN sed -i 's,listen       80;,listen       8080;,' /var/cache/nginx/conf/nginx.conf 
 RUN chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
-    && chown -R $UID:0 /opt/static/videos \
-    && chmod -R g+w /opt/static/videos
+    && mkdir -p /var/cache/data && mkdir /www
 
 USER nginx
 
@@ -179,7 +178,7 @@ RUN whoami
 # Add NGINX path, config and static files.
 ENV PATH "${PATH}:/var/local/nginx/sbin"
 ADD nginx.conf /var/cache/nginx/conf/nginx.conf.template
-RUN mkdir -p /opt/data && mkdir /www
+#RUN mkdir -p /var/cache/data && mkdir /www
 ADD static /www/static
 
 EXPOSE 1935
