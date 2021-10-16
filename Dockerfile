@@ -42,7 +42,7 @@ RUN cd /tmp && \
 # Compile nginx with nginx-rtmp module.
 RUN cd /tmp/nginx-${NGINX_VERSION} && \
   ./configure \
-  --prefix=/usr/local/nginx \
+  --prefix=/var/cache/nginx \
   --add-module=/tmp/nginx-rtmp-module-${NGINX_RTMP_VERSION} \
   --conf-path=/etc/nginx/nginx.conf \
   --with-threads \
@@ -125,12 +125,23 @@ RUN rm -rf /var/cache/* /tmp/*
 # Build the release image.
 FROM alpine:3.13
 LABEL MAINTAINER Alfred Gutierrez <alf.g.jr@gmail.com>
+LABEL MAINTAINER DoJoJo2020
+ARG UID=1001
+ARG GID=1001
+RUN echo 'UID=' $UID
 
 # Set default ports.
 ENV HTTP_PORT 80
 ENV HTTPS_PORT 443
 ENV RTMP_PORT 1935
 
+RUN set -x \
+# create nginx user/group first, to be consistent throughout container runtime variants
+    && addgroup -g $GID -S nginx \
+    && adduser -S -D -H -u $UID -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 
+
+USER root
+    
 RUN apk add --update \
   ca-certificates \
   gettext \
@@ -149,14 +160,25 @@ RUN apk add --update \
   x264-dev \
   x265-dev
 
-COPY --from=build-nginx /usr/local/nginx /usr/local/nginx
-COPY --from=build-nginx /etc/nginx /etc/nginx
+COPY --from=build-nginx /var/cache/nginx /var/cache/nginx
+COPY --from=build-nginx /etc/nginx /var/cache/nginx/conf
 COPY --from=build-ffmpeg /usr/local /usr/local
 COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 
+# implement changes required to run NGINX as an unprivileged user
+RUN sed -i 's,listen       80;,listen       8080;,' /var/cache/nginx/conf/nginx.conf 
+RUN chown -R $UID:0 /var/cache/nginx \
+    && chmod -R g+w /var/cache/nginx \
+    && chown -R $UID:0 /opt/static/videos \
+    && chmod -R g+w /opt/static/videos
+
+USER nginx
+
+RUN whoami
+
 # Add NGINX path, config and static files.
-ENV PATH "${PATH}:/usr/local/nginx/sbin"
-ADD nginx.conf /etc/nginx/nginx.conf.template
+ENV PATH "${PATH}:/var/local/nginx/sbin"
+ADD nginx.conf /var/cache/nginx/conf/nginx.conf.template
 RUN mkdir -p /opt/data && mkdir /www
 ADD static /www/static
 
@@ -164,5 +186,5 @@ EXPOSE 1935
 EXPOSE 80
 
 CMD envsubst "$(env | sed -e 's/=.*//' -e 's/^/\$/g')" < \
-  /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && \
+  /var/cache/nginx/conf/nginx.conf.template > /var/cache/nginx/conf/nginx.conf && \
   nginx
