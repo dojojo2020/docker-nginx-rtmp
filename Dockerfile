@@ -44,7 +44,7 @@ RUN cd /tmp/nginx-${NGINX_VERSION} && \
   ./configure \
   --prefix=/var/cache/nginx \
   --add-module=/tmp/nginx-rtmp-module-${NGINX_RTMP_VERSION} \
-  --conf-path=/etc/nginx/nginx.conf \
+  --conf-path=/var/cache/nginx/conf/nginx.conf \
   --with-threads \
   --with-file-aio \
   --with-http_ssl_module \
@@ -161,7 +161,7 @@ RUN apk add --update \
   x265-dev
 
 COPY --from=build-nginx /var/cache/nginx /var/cache/nginx
-COPY --from=build-nginx /etc/nginx /var/cache/nginx/conf
+COPY --from=build-nginx /var/cache/nginx/conf /var/cache/nginx/conf
 COPY --from=build-ffmpeg /usr/local /usr/local
 COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 
@@ -176,13 +176,12 @@ USER nginx
 RUN whoami
 
 # Add NGINX path, config and static files.
-ENV PATH "${PATH}:/var/local/nginx/sbin"
+ENV PATH "${PATH}:/var/cache/nginx/sbin"
 ADD nginx.conf /var/cache/nginx/conf/nginx.conf.template
-#RUN mkdir -p /var/cache/data && mkdir /www
 ADD static /www/static
 
 EXPOSE 1935
-EXPOSE 80
+EXPOSE 8080
 
 CMD envsubst "$(env | sed -e 's/=.*//' -e 's/^/\$/g')" < \
   /var/cache/nginx/conf/nginx.conf.template > /var/cache/nginx/conf/nginx.conf && \
