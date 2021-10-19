@@ -162,6 +162,7 @@ RUN apk add --update \
 
 COPY --from=build-nginx /var/cache/nginx /var/cache/nginx
 COPY --from=build-nginx /var/cache/nginx/conf /var/cache/nginx/conf
+ENV LD_LIBRARY_PATH=/usr/local/lib
 COPY --from=build-ffmpeg /usr/local /usr/local
 COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 
