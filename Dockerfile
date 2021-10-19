@@ -170,7 +170,7 @@ COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 RUN sed -i 's,listen       80;,listen       8080;,' /var/cache/nginx/conf/nginx.conf 
 RUN chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
-    && mkdir -p /var/cache/data && mkdir /www \
+    && mkdir -p /var/cache/data/hls && mkdir /www \
     && chown -R $UID:0 /var/cache/data && chown -R $UID:0 /www
 
 USER nginx
