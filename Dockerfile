@@ -171,7 +171,7 @@ RUN sed -i 's,listen       80;,listen       8080;,' /var/cache/nginx/conf/nginx.
 RUN chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
     && mkdir -p /var/cache/data && mkdir /www \
-    && chown -R $UID:$GID /var/cache/data /www
+    && chown -R $UID:0 /var/cache/data && chown -R $UID:0 /www
 
 USER nginx
 
