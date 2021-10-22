@@ -167,14 +167,12 @@ COPY --from=build-ffmpeg /usr/local /usr/local
 COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 
 # implement changes required to run NGINX as an unprivileged user
-RUN sed -i 's,listen       80;,listen       8080;,' /var/cache/nginx/conf/nginx.conf 
 RUN chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
     && mkdir -p /var/cache/data/hls && mkdir /www \
     && chown -R $UID:0 /var/cache/data && chown -R $UID:0 /www
 
 USER nginx
-
 RUN whoami
 
 # Add NGINX path, config and static files.
