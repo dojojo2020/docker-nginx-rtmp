@@ -169,7 +169,7 @@ COPY --from=build-ffmpeg /usr/lib/libfdk-aac.so.2 /usr/lib/libfdk-aac.so.2
 # implement changes required to run NGINX as an unprivileged user
 RUN chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
-    && mkdir -p /var/cache/data/hls && mkdir /www \
+    && mkdir -p /var/cache/data/hls && mkdir -p /www/static \
     && chown -R $UID:0 /var/cache/data && chown -R $UID:0 /www
 
 USER nginx
